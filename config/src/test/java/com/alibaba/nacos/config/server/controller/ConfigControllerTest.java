@@ -461,5 +461,11 @@ public class ConfigControllerTest {
         Assert.assertEquals(map.get("test"), resultMap.get("test").toString());
         
     }
+
+    public static void main(String[] args) {
+
+        ConfigController configController = new ConfigController();
+
+    }
     
 }

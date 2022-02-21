@@ -6,13 +6,8 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.alibaba.nacos.api.config.listener.Listener;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
-import com.alibaba.nacos.api.naming.listener.Event;
-import com.alibaba.nacos.api.naming.listener.EventListener;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
-import com.alibaba.nacos.api.naming.pojo.Cluster;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.alibaba.nacos.api.naming.pojo.Service;
-import com.alibaba.nacos.api.naming.pojo.healthcheck.AbstractHealthChecker;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +24,14 @@ public class NacosTest {
 
     @Test
     public void testConfig() throws Exception {
-        String serverAddr = "127.0.0.1:8848";
-        String dataId = "example";
-        String group = "example";
+        final String serverAddr = "127.0.0.1:8848";
+        final String dataId = "example";
+        final String group = "example";
+        final String namespace = "01ec22f3-6134-4e5a-88d4-8f688e92127c";
+
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
+        properties.put(PropertyKeyConst.NAMESPACE, namespace);
         ConfigService configService = NacosFactory.createConfigService(properties);
         String content = configService.getConfig(dataId, group, 50000);
         System.out.println(content);
