@@ -24,43 +24,45 @@ public class NacosTest {
 
     @Test
     public void testConfig() throws Exception {
-        final String serverAddr = "127.0.0.1:8848";
+        final String serverAddr = "127.0.0.1:8489";
         final String dataId = "example";
         final String group = "example";
-        final String namespace = "01ec22f3-6134-4e5a-88d4-8f688e92127c";
+//        final String namespace = "01ec22f3-6134-4e5a-88d4-8f688e92127c";
 
         Properties properties = new Properties();
         properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
-        properties.put(PropertyKeyConst.NAMESPACE, namespace);
+//        properties.put(PropertyKeyConst.NAMESPACE, namespace);
         ConfigService configService = NacosFactory.createConfigService(properties);
-        String content = configService.getConfig(dataId, group, 50000);
-        System.out.println(content);
-        configService.addListener(dataId, group, new Listener() {
-            @Override
-            public void receiveConfigInfo(String configInfo) {
-                System.out.println("recieve1:" + configInfo);
-            }
 
-            @Override
-            public Executor getExecutor() {
-                return null;
-            }
-        });
         boolean isPublishOk = configService
             .publishConfig(dataId, group, "appSecret=xtxwrwrw345466sfsfsf");
         System.out.println(isPublishOk);
 
-        Thread.sleep(3000);
-        content = configService.getConfig(dataId, group, 5000);
+        String content = configService.getConfig(dataId, group, 50000);
         System.out.println(content);
-
-        boolean isRemoveOk = configService.removeConfig(dataId, group);
-        System.out.println(isRemoveOk);
-        Thread.sleep(3000);
-
-        content = configService.getConfig(dataId, group, 5000);
-        System.out.println(content);
-        Thread.sleep(300000);
+//        configService.addListener(dataId, group, new Listener() {
+//            @Override
+//            public void receiveConfigInfo(String configInfo) {
+//                System.out.println("recieve1:" + configInfo);
+//            }
+//
+//            @Override
+//            public Executor getExecutor() {
+//                return null;
+//            }
+//        });
+//
+//        Thread.sleep(3000);
+//        content = configService.getConfig(dataId, group, 5000);
+//        System.out.println(content);
+//
+//        boolean isRemoveOk = configService.removeConfig(dataId, group);
+//        System.out.println(isRemoveOk);
+//        Thread.sleep(3000);
+//
+//        content = configService.getConfig(dataId, group, 5000);
+//        System.out.println(content);
+//        Thread.sleep(300000);
 
 //         测试让主线程不退出，因为订阅配置是守护线程，主线程退出守护线程就会退出。 正式代码中无需下面代码
 //        while (true) {
