@@ -33,25 +33,26 @@ public class NacosTest {
         properties.put(PropertyKeyConst.SERVER_ADDR, serverAddr);
 //        properties.put(PropertyKeyConst.NAMESPACE, namespace);
         ConfigService configService = NacosFactory.createConfigService(properties);
+//
+        configService.addListener(dataId, group, new Listener() {
+            @Override
+            public void receiveConfigInfo(String configInfo) {
+                System.out.println("recieve1:" + configInfo);
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return null;
+            }
+        });
 
         boolean isPublishOk = configService
-            .publishConfig(dataId, group, "appSecret=xtxwrwrw345466sfsfsf");
+            .publishConfig(dataId, group, "appSecret=2345678");
         System.out.println(isPublishOk);
 
-        String content = configService.getConfig(dataId, group, 50000);
-        System.out.println(content);
-//        configService.addListener(dataId, group, new Listener() {
-//            @Override
-//            public void receiveConfigInfo(String configInfo) {
-//                System.out.println("recieve1:" + configInfo);
-//            }
-//
-//            @Override
-//            public Executor getExecutor() {
-//                return null;
-//            }
-//        });
-//
+//        String content = configService.getConfig(dataId, group, 50000);
+//        System.out.println(content);
+
 //        Thread.sleep(3000);
 //        content = configService.getConfig(dataId, group, 5000);
 //        System.out.println(content);

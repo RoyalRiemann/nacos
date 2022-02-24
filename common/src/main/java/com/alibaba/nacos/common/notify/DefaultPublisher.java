@@ -102,6 +102,7 @@ public class DefaultPublisher extends Thread implements EventPublisher {
             int waitTimes = 60;
             // To ensure that messages are not lost, enable EventHandler when
             // waiting for the first Subscriber to register
+            //等待60s或者等待有订阅者注册了
             for (; ; ) {
                 if (shutdown || hasSubscriber() || waitTimes <= 0) {
                     break;
@@ -178,15 +179,17 @@ public class DefaultPublisher extends Thread implements EventPublisher {
             return;
         }
         
-        // Notification single event listener
+        // Notification single event listener:为什么这里非常确定是单事件监听器?
         for (Subscriber subscriber : subscribers) {
             // Whether to ignore expiration events
+            //这里主要是判断,事件是否过期,或者序列号是否大于当前序列号
             if (subscriber.ignoreExpireEvent() && lastEventSequence > currentEventSequence) {
                 LOGGER.debug("[NotifyCenter] the {} is unacceptable to this subscriber, because had expire",
                         event.getClass());
                 continue;
             }
-            
+
+            //统一smartSubscriber和subscriber
             // Because unifying smartSubscriber and subscriber, so here need to think of compatibility.
             // Remove original judge part of codes.
             notifySubscriber(subscriber, event);

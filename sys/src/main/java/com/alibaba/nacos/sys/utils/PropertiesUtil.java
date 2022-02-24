@@ -29,17 +29,17 @@ import java.util.Properties;
  * @author xiweng.yy
  */
 public class PropertiesUtil {
-    
+
     public static Properties getPropertiesWithPrefix(Environment environment, String prefix)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         return handleSpringBinder(environment, prefix, Properties.class);
     }
-    
+
     public static Map<String, Object> getPropertiesWithPrefixForMap(Environment environment, String prefix)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         return handleSpringBinder(environment, prefix, Map.class);
     }
-    
+
     /**
      * Handle spring binder to bind object.
      *
@@ -59,6 +59,11 @@ public class PropertiesUtil {
         String prefixParam = prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
         Object bindResultObject = bindMethod.invoke(binderObject, prefixParam, targetClass);
         Method resultGetMethod = bindResultObject.getClass().getDeclaredMethod("get");
-        return (T) resultGetMethod.invoke(bindResultObject);
+        try {
+            return (T) resultGetMethod.invoke(bindResultObject);
+        }catch (Exception e){
+            return null;
+        }
+
     }
 }

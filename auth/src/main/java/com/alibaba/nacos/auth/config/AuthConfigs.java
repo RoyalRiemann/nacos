@@ -84,14 +84,16 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
         try {
             Map<String, Properties> newProperties = new HashMap<>(1);
             Properties properties = PropertiesUtil.getPropertiesWithPrefix(EnvUtil.getEnvironment(), PREFIX);
-            for (String each : properties.stringPropertyNames()) {
-                int typeIndex = each.indexOf('.');
-                String type = each.substring(0, typeIndex);
-                if (!newProperties.containsKey(type)) {
-                    newProperties.put(type, new Properties());
+            if(null != properties){
+                for (String each : properties.stringPropertyNames()) {
+                    int typeIndex = each.indexOf('.');
+                    String type = each.substring(0, typeIndex);
+                    if (!newProperties.containsKey(type)) {
+                        newProperties.put(type, new Properties());
+                    }
+                    String subKey = each.substring(typeIndex + 1);
+                    newProperties.get(type).setProperty(subKey, properties.getProperty(each));
                 }
-                String subKey = each.substring(typeIndex + 1);
-                newProperties.get(type).setProperty(subKey, properties.getProperty(each));
             }
             authPluginProperties = newProperties;
         } catch (Exception e) {
