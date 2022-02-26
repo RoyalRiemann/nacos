@@ -44,47 +44,47 @@ import java.util.Properties;
  */
 @Configuration
 public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthConfigs.class);
-    
+
     private static final String PREFIX = "nacos.core.auth.plugin";
-    
+
     @JustForTest
     private static Boolean cachingEnabled = null;
-    
+
     /**
      * Whether auth enabled.
      */
     @Value("${" + Constants.Auth.NACOS_CORE_AUTH_ENABLED + ":false}")
     private boolean authEnabled;
-    
+
     /**
      * Which auth system is in use.
      */
     @Value("${" + Constants.Auth.NACOS_CORE_AUTH_SYSTEM_TYPE + ":}")
     private String nacosAuthSystemType;
-    
+
     @Value("${" + Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_KEY + ":}")
     private String serverIdentityKey;
-    
+
     @Value("${" + Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_VALUE + ":}")
     private String serverIdentityValue;
-    
+
     @Value("${" + Constants.Auth.NACOS_CORE_AUTH_ENABLE_USER_AGENT_AUTH_WHITE + ":false}")
     private boolean enableUserAgentAuthWhite;
-    
+
     private Map<String, Properties> authPluginProperties = new HashMap<>();
-    
+
     public AuthConfigs() {
         NotifyCenter.registerSubscriber(this);
         refreshPluginProperties();
     }
-    
+
     private void refreshPluginProperties() {
         try {
             Map<String, Properties> newProperties = new HashMap<>(1);
             Properties properties = PropertiesUtil.getPropertiesWithPrefix(EnvUtil.getEnvironment(), PREFIX);
-            if(null != properties){
+            if (null != properties) {
                 for (String each : properties.stringPropertyNames()) {
                     int typeIndex = each.indexOf('.');
                     String type = each.substring(0, typeIndex);
@@ -100,23 +100,23 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
             LOGGER.warn("Refresh plugin properties failed ", e);
         }
     }
-    
+
     public String getNacosAuthSystemType() {
         return nacosAuthSystemType;
     }
-    
+
     public String getServerIdentityKey() {
         return serverIdentityKey;
     }
-    
+
     public String getServerIdentityValue() {
         return serverIdentityValue;
     }
-    
+
     public boolean isEnableUserAgentAuthWhite() {
         return enableUserAgentAuthWhite;
     }
-    
+
     /**
      * auth function is open.
      *
@@ -125,7 +125,7 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
     public boolean isAuthEnabled() {
         return authEnabled;
     }
-    
+
     /**
      * Whether permission information can be cached.
      *
@@ -135,9 +135,10 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
         if (Objects.nonNull(AuthConfigs.cachingEnabled)) {
             return cachingEnabled;
         }
-        return ConvertUtils.toBoolean(EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_CACHING_ENABLED, "true"));
+        return ConvertUtils
+            .toBoolean(EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_CACHING_ENABLED, "true"));
     }
-    
+
     public Properties getAuthPluginProperties(String authType) {
         if (!authPluginProperties.containsKey(authType)) {
             LOGGER.warn("Can't find properties for type {}, will use empty properties", authType);
@@ -145,28 +146,34 @@ public class AuthConfigs extends Subscriber<ServerConfigChangeEvent> {
         }
         return authPluginProperties.get(authType);
     }
-    
+
     @JustForTest
     public static void setCachingEnabled(boolean cachingEnabled) {
         AuthConfigs.cachingEnabled = cachingEnabled;
     }
-    
+
     @Override
     public void onEvent(ServerConfigChangeEvent event) {
         try {
-            authEnabled = EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_ENABLED, Boolean.class, false);
-            cachingEnabled = EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_CACHING_ENABLED, Boolean.class, true);
-            serverIdentityKey = EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_KEY, "");
-            serverIdentityValue = EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_VALUE, "");
+            authEnabled = EnvUtil
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_ENABLED, Boolean.class, false);
+            cachingEnabled = EnvUtil
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_CACHING_ENABLED, Boolean.class, true);
+            serverIdentityKey = EnvUtil
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_KEY, "");
+            serverIdentityValue = EnvUtil
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_SERVER_IDENTITY_VALUE, "");
             enableUserAgentAuthWhite = EnvUtil
-                    .getProperty(Constants.Auth.NACOS_CORE_AUTH_ENABLE_USER_AGENT_AUTH_WHITE, Boolean.class, false);
-            nacosAuthSystemType = EnvUtil.getProperty(Constants.Auth.NACOS_CORE_AUTH_SYSTEM_TYPE, "");
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_ENABLE_USER_AGENT_AUTH_WHITE,
+                    Boolean.class, false);
+            nacosAuthSystemType = EnvUtil
+                .getProperty(Constants.Auth.NACOS_CORE_AUTH_SYSTEM_TYPE, "");
             refreshPluginProperties();
         } catch (Exception e) {
             LOGGER.warn("Upgrade auth config from env failed, use old value", e);
         }
     }
-    
+
     @Override
     public Class<? extends Event> subscribeType() {
         return ServerConfigChangeEvent.class;

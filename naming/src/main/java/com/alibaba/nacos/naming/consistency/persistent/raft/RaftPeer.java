@@ -30,20 +30,27 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author nacos
  */
 @Deprecated
-public class RaftPeer {
-    
+public class RaftPeer {//raft对等体?
+
+    //本地的IP
     public String ip;
-    
+
+    //为谁投票
     public String voteFor;
-    
+
+    //任期
     public AtomicLong term = new AtomicLong(0L);
-    
+
+    //leader任务超时
     public volatile long leaderDueMs = RandomUtils.nextLong(0, GlobalExecutor.LEADER_TIMEOUT_MS);
-    
+
+    //心跳周期
     public volatile long heartbeatDueMs = RandomUtils.nextLong(0, GlobalExecutor.HEARTBEAT_INTERVAL_MS);
-    
+
+    //状态
     public volatile State state = State.FOLLOWER;
-    
+
+    //确定leader任期
     public void resetLeaderDue() {
         leaderDueMs = GlobalExecutor.LEADER_TIMEOUT_MS + RandomUtils.nextLong(0, GlobalExecutor.RANDOM_MS);
     }

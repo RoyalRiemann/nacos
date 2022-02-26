@@ -280,6 +280,7 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
             setCorrectUsageDelay(getInt(PropertiesConstant.CORRECT_USAGE_DELAY, correctUsageDelay));
             setInitialExpansionPercent(getInt(PropertiesConstant.INITIAL_EXPANSION_PERCENT, initialExpansionPercent));
             // External data sources are used by default in cluster mode
+            //如果数据库是mysql,默认的useExternalDB=true
             setUseExternalDB(PropertiesConstant.MYSQL
                     .equalsIgnoreCase(getString(PropertiesConstant.SPRING_DATASOURCE_PLATFORM, "")));
             
@@ -287,10 +288,12 @@ public class PropertyUtil implements ApplicationContextInitializer<ConfigurableA
             // This value is true in stand-alone mode and false in cluster mode
             // If this value is set to true in cluster mode, nacos's distributed storage engine is turned on
             // default value is depend on ${nacos.standalone}
-            
+
+            //如果使用了外部的存储,内部聚合的存储就是false
             if (isUseExternalDB()) {
                 setEmbeddedStorage(false);
             } else {
+                //如果不是外部使用数,就说明使用了默认的聚合存储
                 boolean embeddedStorage =
                         PropertyUtil.embeddedStorage || Boolean.getBoolean(PropertiesConstant.EMBEDDED_STORAGE);
                 setEmbeddedStorage(embeddedStorage);

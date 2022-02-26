@@ -45,19 +45,26 @@ import java.util.Set;
 @SuppressWarnings("all")
 @Component(value = "ProtocolManager")
 public class ProtocolManager extends MemberChangeListener implements DisposableBean {
-    
+
+    //CP协议
     private CPProtocol cpProtocol;
-    
+
+    //AP协议
     private APProtocol apProtocol;
-    
+
+    //节点管理服务
     private final ServerMemberManager memberManager;
-    
+
+    //AP是否初始化
     private boolean apInit = false;
-    
+
+    //CP是否初始化
     private boolean cpInit = false;
-    
+
+    //节点
     private Set<Member> oldMembers;
-    
+
+    //协议管理初始化
     public ProtocolManager(ServerMemberManager memberManager) {
         this.memberManager = memberManager;
         NotifyCenter.registerSubscriber(this);

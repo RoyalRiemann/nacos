@@ -267,6 +267,7 @@ public class MemberUtil {
         if (null == expected) {
             return null == actual;
         }
+        //IP PORT ADDRESS ablity
         if (!expected.getIp().equals(actual.getIp())) {
             return true;
         }

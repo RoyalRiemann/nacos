@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 @SuppressWarnings("PMD.Rule:CollectionInitShouldAssignCapacityRule")
 public final class ProtocolMetaData {
-    
+
     private final Map<String, MetaData> metaDataMap = new ConcurrentHashMap<>(4);
     
     public Map<String, Map<Object, Object>> getMetaDataMap() {

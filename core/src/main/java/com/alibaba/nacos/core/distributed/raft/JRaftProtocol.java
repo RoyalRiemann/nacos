@@ -92,15 +92,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressWarnings("all")
 public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, RequestProcessor4CP>
         implements CPProtocol<RaftConfig, RequestProcessor4CP> {
-    
+
+    //是否初始化
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    
+
+    //是否关闭
     private final AtomicBoolean shutdowned = new AtomicBoolean(false);
-    
+
+    //序列化器
     private final Serializer serializer = SerializeFactory.getDefault();
-    
+
+    //Raft配置
     private RaftConfig raftConfig;
-    
+
+    //RAFT服务
     private JRaftServer raftServer;
     
     private JRaftMaintainService jRaftMaintainService;
@@ -117,8 +122,8 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     public void init(RaftConfig config) {
         if (initialized.compareAndSet(false, true)) {
             this.raftConfig = config;
-            NotifyCenter.registerToSharePublisher(RaftEvent.class);
-            this.raftServer.init(this.raftConfig);
+            NotifyCenter.registerToSharePublisher(RaftEvent.class);//注册RaftEvent事件到sharePublisher
+            this.raftServer.init(this.raftConfig);//服务初始化
             this.raftServer.start();
             
             // There is only one consumer to ensure that the internal consumption
@@ -130,10 +135,10 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
                     final String groupId = event.getGroupId();
                     Map<String, Map<String, Object>> value = new HashMap<>();
                     Map<String, Object> properties = new HashMap<>();
-                    final String leader = event.getLeader();
-                    final Long term = event.getTerm();
-                    final List<String> raftClusterInfo = event.getRaftClusterInfo();
-                    final String errMsg = event.getErrMsg();
+                    final String leader = event.getLeader();//leader
+                    final Long term = event.getTerm();//任期
+                    final List<String> raftClusterInfo = event.getRaftClusterInfo();//集群信息
+                    final String errMsg = event.getErrMsg();//失败信息
                     
                     // Leader information needs to be selectively updated. If it is valid data,
                     // the information in the protocol metadata is updated.
@@ -146,6 +151,7 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
                     metaData.load(value);
                     
                     // The metadata information is injected into the metadata information of the node
+                    //元数据信息注入到Node节点中
                     injectProtocolMetaData(metaData);
                 }
                 
@@ -212,7 +218,7 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     
     private void injectProtocolMetaData(ProtocolMetaData metaData) {
         Member member = memberManager.getSelf();
-        member.setExtendVal("raftMetaData", metaData);
+        member.setExtendVal("raftMetaData", metaData);//增加raft元数据信息
         memberManager.update(member);
     }
     

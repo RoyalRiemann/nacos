@@ -188,7 +188,7 @@ public class RaftPeerSet extends MemberChangeListener implements Closeable {
         int maxApproveCount = 0;
         String maxApprovePeer = null;
         for (RaftPeer peer : peers.values()) {
-            if (StringUtils.isEmpty(peer.voteFor)) {
+            if (StringUtils.isEmpty(peer.voteFor)) {//没有返回投给谁
                 continue;
             }
             
@@ -222,7 +222,7 @@ public class RaftPeerSet extends MemberChangeListener implements Closeable {
     public RaftPeer makeLeader(RaftPeer candidate) {
         if (!Objects.equals(leader, candidate)) {
             leader = candidate;
-            ApplicationUtils.publishEvent(new MakeLeaderEvent(this, leader, local()));
+            ApplicationUtils.publishEvent(new MakeLeaderEvent(this, leader, local())); //修改leader之后,发出make事件
             Loggers.RAFT
                     .info("{} has become the LEADER, local: {}, leader: {}", leader.ip, JacksonUtils.toJson(local()),
                             JacksonUtils.toJson(leader));
@@ -230,10 +230,11 @@ public class RaftPeerSet extends MemberChangeListener implements Closeable {
         
         for (final RaftPeer peer : peers.values()) {
             Map<String, String> params = new HashMap<>(1);
-            if (!Objects.equals(peer, candidate) && peer.state == RaftPeer.State.LEADER) {
+            if (!Objects.equals(peer, candidate) && peer.state == RaftPeer.State.LEADER) {//有一个leader的情况
                 try {
                     String url = RaftCore.buildUrl(peer.ip, RaftCore.API_GET_PEER);
                     HttpClient.asyncHttpGet(url, null, params, new Callback<String>() {
+                        //发一个空消息过去?目的是什么?估计就是测试一下网路联通性
                         @Override
                         public void onReceive(RestResult<String> result) {
                             if (!result.ok()) {

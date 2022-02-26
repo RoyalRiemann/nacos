@@ -24,7 +24,7 @@ public class NacosTest {
 
     @Test
     public void testConfig() throws Exception {
-        final String serverAddr = "127.0.0.1:8489";
+        final String serverAddr = "127.0.0.1:8848";
         final String dataId = "example";
         final String group = "example";
 //        final String namespace = "01ec22f3-6134-4e5a-88d4-8f688e92127c";

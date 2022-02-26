@@ -35,8 +35,7 @@ public class PropertiesUtil {
         return handleSpringBinder(environment, prefix, Properties.class);
     }
 
-    public static Map<String, Object> getPropertiesWithPrefixForMap(Environment environment,
-        String prefix)
+    public static Map<String, Object> getPropertiesWithPrefixForMap(Environment environment, String prefix)
         throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         return handleSpringBinder(environment, prefix, Map.class);
     }
@@ -51,17 +50,14 @@ public class PropertiesUtil {
      * @return binder object
      */
     @SuppressWarnings("unchecked")
-    public static <T> T handleSpringBinder(Environment environment, String prefix,
-        Class<T> targetClass)
+    public static <T> T handleSpringBinder(Environment environment, String prefix, Class<T> targetClass)
         throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
         try {
-            Class<?> binderClass = Class
-                .forName("org.springframework.boot.context.properties.bind.Binder");
+            Class<?> binderClass = Class.forName("org.springframework.boot.context.properties.bind.Binder");
             Method getMethod = binderClass.getDeclaredMethod("get", Environment.class);
             Method bindMethod = binderClass.getDeclaredMethod("bind", String.class, Class.class);
             Object binderObject = getMethod.invoke(null, environment);
-            String prefixParam =
-                prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
+            String prefixParam = prefix.endsWith(".") ? prefix.substring(0, prefix.length() - 1) : prefix;
             Object bindResultObject = bindMethod.invoke(binderObject, prefixParam, targetClass);
             Method resultGetMethod = bindResultObject.getClass().getDeclaredMethod("get");
             return (T) resultGetMethod.invoke(bindResultObject);

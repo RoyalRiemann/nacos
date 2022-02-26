@@ -497,7 +497,8 @@ public class RaftCore implements Closeable {
             }
             
         }
-        
+
+        //发起投票,首先把leader置为空,然后将投票IP设置为自己的IP,然后将自己的状态改为candidate
         private void sendVote() {
             
             RaftPeer local = peers.get(NetUtils.localServer());
@@ -512,8 +513,8 @@ public class RaftCore implements Closeable {
             
             Map<String, String> params = new HashMap<>(1);
             params.put("vote", JacksonUtils.toJson(local));
-            for (final String server : peers.allServersWithoutMySelf()) {
-                final String url = buildUrl(server, API_VOTE);
+            for (final String server : peers.allServersWithoutMySelf()) {//找出除了自己之外的所有node
+                final String url = buildUrl(server, API_VOTE);//投票,通过http的形式进行调用vote接口
                 try {
                     HttpClient.asyncHttpPost(url, null, params, new Callback<String>() {
                         @Override
@@ -524,9 +525,11 @@ public class RaftCore implements Closeable {
                             }
                             
                             RaftPeer peer = JacksonUtils.toObj(result.getData(), RaftPeer.class);
-                            
+
+                            //收到同行的回复
                             Loggers.RAFT.info("received approve from peer: {}", JacksonUtils.toJson(peer));
-                            
+
+                            //通过判断votefor对应的数量,选择leader,然后将事件广播出去
                             peers.decideLeader(peer);
                             
                         }
@@ -563,6 +566,7 @@ public class RaftCore implements Closeable {
         }
         
         RaftPeer local = peers.get(NetUtils.localServer());
+        //远程的任期是否小于本地任期
         if (remote.term.get() <= local.term.get()) {
             String msg = "received illegitimate vote" + ", voter-term:" + remote.term + ", votee-term:" + local.term;
             
@@ -575,7 +579,8 @@ public class RaftCore implements Closeable {
         }
         
         local.resetLeaderDue();
-        
+
+        //如果任期大于本地的peer任期,则本地一定是follower,那投票给远程的IP,并且把任期设置为远程的任期
         local.state = RaftPeer.State.FOLLOWER;
         local.voteFor = remote.ip;
         local.term.set(remote.term.get());
@@ -614,7 +619,7 @@ public class RaftCore implements Closeable {
         
         private void sendBeat() throws IOException, InterruptedException {
             RaftPeer local = peers.local();
-            if (EnvUtil.getStandaloneMode() || local.state != RaftPeer.State.LEADER) {
+            if (EnvUtil.getStandaloneMode() || local.state != RaftPeer.State.LEADER) { //单例模式和非leader节点不需要发heartBeat
                 return;
             }
             if (Loggers.RAFT.isDebugEnabled()) {
@@ -629,7 +634,7 @@ public class RaftCore implements Closeable {
             
             ArrayNode array = JacksonUtils.createEmptyArrayNode();
             
-            if (switchDomain.isSendBeatOnly()) {
+            if (switchDomain.isSendBeatOnly()) {//只发送心跳
                 Loggers.RAFT.info("[SEND-BEAT-ONLY] {}", switchDomain.isSendBeatOnly());
             }
             
@@ -638,9 +643,9 @@ public class RaftCore implements Closeable {
                     
                     ObjectNode element = JacksonUtils.createEmptyJsonNode();
                     
-                    if (KeyBuilder.matchServiceMetaKey(datum.key)) {
+                    if (KeyBuilder.matchServiceMetaKey(datum.key)) {//服务key
                         element.put("key", KeyBuilder.briefServiceMetaKey(datum.key));
-                    } else if (KeyBuilder.matchInstanceListKey(datum.key)) {
+                    } else if (KeyBuilder.matchInstanceListKey(datum.key)) {//实例key
                         element.put("key", KeyBuilder.briefInstanceListkey(datum.key));
                     }
                     element.put("timestamp", datum.timestamp.get());
@@ -745,7 +750,8 @@ public class RaftCore implements Closeable {
             throw new IllegalArgumentException(
                     "out of date beat, beat-from-term: " + remote.term.get() + ", beat-to-term: " + local.term.get());
         }
-        
+
+        //本地不是follower,这种情况应该是发生了脑裂?,因为通过前面的判断已经知道,remote的任期应该是不小于本地的任期的,所以将本地的状态改为follower
         if (local.state != RaftPeer.State.FOLLOWER) {
             
             Loggers.RAFT.info("[RAFT] make remote as leader, remote peer: {}", JacksonUtils.toJson(remote));
@@ -758,7 +764,7 @@ public class RaftCore implements Closeable {
         local.resetLeaderDue();
         local.resetHeartbeatDue();
         
-        peers.makeLeader(remote);
+        peers.makeLeader(remote);//测试下远程OK与否,更新
         
         if (!switchDomain.isSendBeatOnly()) {
             
@@ -798,7 +804,7 @@ public class RaftCore implements Closeable {
                 receivedKeysMap.put(datumKey, 1);
                 
                 try {
-                    if (datums.containsKey(datumKey) && datums.get(datumKey).timestamp.get() >= timestamp
+                    if (datums.containsKey(datumKey) && datums.get(datumKey).timestamp.get() >= timestamp//说明当前缓存的比去拉取的还要新
                             && processedCount < beatDatums.size()) {
                         continue;
                     }
@@ -806,7 +812,8 @@ public class RaftCore implements Closeable {
                     if (!(datums.containsKey(datumKey) && datums.get(datumKey).timestamp.get() >= timestamp)) {
                         batch.add(datumKey);
                     }
-                    
+
+                    //批次50
                     if (batch.size() < 50 && processedCount < beatDatums.size()) {
                         continue;
                     }
