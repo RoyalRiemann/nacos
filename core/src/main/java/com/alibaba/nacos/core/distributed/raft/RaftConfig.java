@@ -38,11 +38,14 @@ import java.util.Set;
 public class RaftConfig implements Config<RequestProcessor4CP> {
     
     private static final long serialVersionUID = 9174789390266064002L;
-    
+
+    //数据
     private Map<String, String> data = Collections.synchronizedMap(new HashMap<>());
-    
+
+    //自己的地址
     private String selfAddress;
-    
+
+    //成员
     private Set<String> members = Collections.synchronizedSet(new HashSet<>());
     
     @Override

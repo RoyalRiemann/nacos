@@ -121,7 +121,6 @@ public class JRaftServer {
     private CliService cliService;
     
     // Ordinary member variable
-    
     private Map<String, RaftGroupTuple> multiRaftGroup = new ConcurrentHashMap<>();
     
     private volatile boolean isStarted = false;
@@ -446,7 +445,7 @@ public class JRaftServer {
             closure.run(new Status(RaftError.UNKNOWN, e.toString()));
         }
     }
-    
+    //为什么只处理删除?
     boolean peerChange(JRaftMaintainService maintainService, Set<String> newPeers) {
         // This is only dealing with node deletion, the Raft protocol, where the node adds itself to the cluster when it starts up
         Set<String> oldPeers = new HashSet<>(this.raftConfig.getMembers());
@@ -530,9 +529,11 @@ public class JRaftServer {
     }
     
     public static class RaftGroupTuple {
-        
+
+        //处理器
         private RequestProcessor processor;
-        
+
+        //节点
         private Node node;
         
         private RaftGroupService raftGroupService;

@@ -80,32 +80,39 @@ public class NacosTest {
         NamingService naming = NamingFactory.createNamingService("127.0.0.1:8848");
         naming.registerInstance("cn.spring.nacos.example", "NACOS_EXAMPLE", "11.11.11.11", 8888,
             "TEST1");
+//
+//        naming.registerInstance("cn.spring.nacos.example", "NACOS_EXAMPLE", "131.131.131.131", 8888,
+//            "TEST1");
+//
+//        Instance instance = new Instance();
+//        instance.setIp("111.111.111.111");
+//        instance.setInstanceId("122.122.122.122");
+//        instance.setPort(999);
+//        instance.setClusterName("CLUSTER1");
+//        instance.setEnabled(Boolean.TRUE);
+//        instance.setEphemeral(true);
+//        instance.setWeight(2);
+//        instance.setHealthy(false);
+//        Map<String, String> meta = new HashMap<>();
+//        meta.put("site", "ec2");
+//        instance.setMetadata(meta);
+//        instance.setServiceName("service");
+//        naming.registerInstance("cn.spring.nacos.instant", instance);
+//        naming.subscribe("cn.spring.nacos.instant", event -> {
+//            if (event instanceof NamingEvent) {
+//                System.out.println(((NamingEvent) event).getInstances());
+//            }
+//        });
 
-        naming.registerInstance("cn.spring.nacos.example", "NACOS_EXAMPLE", "131.131.131.131", 8888,
-            "TEST1");
+//        List<Instance> list = naming.getAllInstances("cn.spring.nacos.example");
+//        list.forEach(System.out::print);
+        while(true){
+            try {
+                Thread.sleep(5000l);
+            }catch (Exception e){
 
-        Instance instance = new Instance();
-        instance.setIp("111.111.111.111");
-        instance.setInstanceId("122.122.122.122");
-        instance.setPort(999);
-        instance.setClusterName("CLUSTER1");
-        instance.setEnabled(Boolean.TRUE);
-        instance.setEphemeral(true);
-        instance.setWeight(2);
-        instance.setHealthy(false);
-        Map<String, String> meta = new HashMap<>();
-        meta.put("site", "ec2");
-        instance.setMetadata(meta);
-        instance.setServiceName("service");
-        naming.registerInstance("cn.spring.nacos.instant", instance);
-        naming.subscribe("cn.spring.nacos.instant", event -> {
-            if (event instanceof NamingEvent) {
-                System.out.println(((NamingEvent) event).getInstances());
             }
-        });
-
-        List<Instance> list = naming.getAllInstances("cn.spring.nacos.example");
-        list.forEach(System.out::print);
+        }
     }
 
     @Test
