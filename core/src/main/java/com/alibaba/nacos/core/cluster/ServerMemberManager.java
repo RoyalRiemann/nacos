@@ -154,14 +154,17 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
 
     protected void init() throws NacosException {
         Loggers.CORE.info("Nacos-related cluster resource initialization");
+        //如果定制就用定制的,如果不定制就用默认的8848
         this.port = EnvUtil.getProperty(SERVER_PORT_PROPERTY, Integer.class, DEFAULT_SERVER_PORT);
+        //ip:port
         this.localAddress = InetUtils.getSelfIP() + ":" + port;
-        this.self = MemberUtil.singleParse(this.localAddress);
+        this.self = MemberUtil.singleParse(this.localAddress);//构造node节点
         this.self.setExtendVal(MemberMetaDataConstants.VERSION, VersionUtils.version);
 
         // init abilities.
         this.self.setAbilities(initMemberAbilities());
 
+        //把self放到列表中
         serverList.put(self.getAddress(), self);
 
         // register NodeChangeEvent publisher to NotifyManager
@@ -204,15 +207,16 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     }
 
     private void registerClusterEvent() {
-        // Register node change events
+        // Register node change events 这里订阅MemberChangeEvent的地方很多......
         NotifyCenter.registerToPublisher(MembersChangeEvent.class,
             EnvUtil.getProperty(MEMBER_CHANGE_EVENT_QUEUE_SIZE_PROPERTY, Integer.class, DEFAULT_MEMBER_CHANGE_EVENT_QUEUE_SIZE));
 
         // The address information of this node needs to be dynamically modified
-        // when registering the IP change of this node
+        // when registering the IP change of this node 订阅IPChangeEvent事件
         NotifyCenter.registerSubscriber(new Subscriber<InetUtils.IPChangeEvent>() {
             @Override
             public void onEvent(InetUtils.IPChangeEvent event) {
+                //检测网关操作.然后替换自己的IP,为什么这里不发布一个MemberChangeEvent事件?
                 String newAddress = event.getNewIP() + ":" + port;
                 ServerMemberManager.this.localAddress = newAddress;
                 EnvUtil.setLocalAddress(localAddress);

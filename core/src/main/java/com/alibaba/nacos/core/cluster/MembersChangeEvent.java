@@ -36,9 +36,11 @@ import java.util.HashSet;
 public class MembersChangeEvent extends Event {
     
     private static final long serialVersionUID = 7308126651076668976L;
-    
+
+    //nodes in cluster env
     private final Collection<Member> members;
-    
+
+    // what trigger?
     private final Collection<Member> triggers;
     
     private MembersChangeEvent(Collection<Member> members, Collection<Member> triggers) {
