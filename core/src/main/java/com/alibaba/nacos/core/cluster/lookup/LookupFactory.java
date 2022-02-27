@@ -127,7 +127,8 @@ public final class LookupFactory {
     public static void destroy() throws NacosException {
         Objects.requireNonNull(LOOK_UP).destroy();
     }
-    
+
+    //配置模式,文件模式,还是地址服务模式
     public enum LookupType {
         
         /**

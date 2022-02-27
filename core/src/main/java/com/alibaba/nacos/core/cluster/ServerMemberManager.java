@@ -258,13 +258,16 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         }
 
         serverList.computeIfPresent(address, (s, member) -> {
+            //如果是下线,则进行移除
             if (NodeState.DOWN.equals(newMember.getState())) {
                 memberAddressInfos.remove(newMember.getAddress());
             }
+            //新的node增加一个参数:lastRefreshTime
             boolean isPublishChangeEvent = MemberUtil.isBasicInfoChanged(newMember, member);
             newMember.setExtendVal(MemberMetaDataConstants.LAST_REFRESH_TIME,
                 System.currentTimeMillis());
             MemberUtil.copy(newMember, member);
+            //如果是基本信息修改，需要发送MembersChangeEvent通知
             if (isPublishChangeEvent) {
                 // member basic data changes and all listeners need to be notified
                 notifyMemberChange(member);
@@ -292,7 +295,8 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
             return true;
         }
 
-        // If only IP information is passed in, a fuzzy match is required
+        // If only IP information is passed in, a fuzzy match is required 模糊匹配
+        //主要是解决那种值传入IP没有传入IP:PORT这种形式的情况
         for (Map.Entry<String, Member> entry : serverList.entrySet()) {
             if (StringUtils.contains(entry.getKey(), address)) {
                 result = true;
@@ -302,6 +306,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return result;
     }
 
+    //获取所有不是健康状态的node
     public List<String> getServerListUnhealth() {
         List<String> unhealthyMembers = new ArrayList<>();
         for (Member member : this.allMembers()) {
@@ -314,14 +319,17 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return unhealthyMembers;
     }
 
+    //返回查找模式
     public MemberLookup getLookup() {
         return lookup;
     }
 
+    //返回自己
     public Member getSelf() {
         return this.self;
     }
 
+    //通过address查询到node
     public Member find(String address) {
         return serverList.get(address);
     }
@@ -331,7 +339,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      *
      * @return {@link Collection} all member
      */
-    public Collection<Member> allMembers() {
+    public Collection<Member> allMembers() { //从这里看出来，serverList中是不包含自己的??或者只是以防万一
         // We need to do a copy to avoid affecting the real data
         HashSet<Member> set = new HashSet<>(serverList.values());
         set.add(self);
@@ -343,7 +351,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      *
      * @return {@link Collection} all member without self
      */
-    public List<Member> allMembersWithoutSelf() {
+    public List<Member> allMembersWithoutSelf() { //获取出自己之外的所有server
         List<Member> members = new ArrayList<>(serverList.values());
         members.remove(self);
         return members;
@@ -355,6 +363,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
             return false;
         }
 
+        //是否包含自己的IP
         boolean isContainSelfIp = members.stream()
             .anyMatch(ipPortTmp -> Objects.equals(localAddress, ipPortTmp.getAddress()));
 
@@ -401,6 +410,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         // Persist the current cluster node information to cluster.conf
         // <important> need to put the event publication into a synchronized block to ensure
         // that the event publication is sequential
+        //首先将新的cluster node 持久化到cluster.conf,然后在进行通知
         if (hasChange) {
             MemberUtil.syncToFile(finalMembers);
             Event event = MembersChangeEvent.builder().members(finalMembers).build();
@@ -414,7 +424,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      * members join this cluster.
      *
      * @param members {@link Collection} new members
-     * @return is success
+     * @return is success 加入集群
      */
     public synchronized boolean memberJoin(Collection<Member> members) {
         Set<Member> set = new HashSet<>(members);
@@ -426,7 +436,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      * members leave this cluster.
      *
      * @param members {@link Collection} wait leave members
-     * @return is success
+     * @return is success remove集群
      */
     public synchronized boolean memberLeave(Collection<Member> members) {
         Set<Member> set = new HashSet<>(allMembers());
@@ -438,7 +448,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
      * this member {@link Member#getState()} is health.
      *
      * @param address ip:port
-     * @return is health
+     * @return is health 是否不健康，如果不存在也是false，如果存在但是不是UP状态也是false
      */
     public boolean isUnHealth(String address) {
         Member member = serverList.get(address);
@@ -448,6 +458,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
         return !NodeState.UP.equals(member.getState());
     }
 
+    //是否第一个集群点,？？
     public boolean isFirstIp() {
         return Objects.equals(serverList.firstKey(), this.localAddress);
     }
@@ -532,6 +543,7 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
 
             Loggers.CLUSTER.debug("report the metadata to the node : {}", target.getAddress());
 
+            //用第一个node的节点造一个链接，然后去调用这个链接查询集群信息
             final String url = HttpUtils
                 .buildUrl(false, target.getAddress(), EnvUtil.getContextPath(),
                     Commons.NACOS_CORE_CONTEXT,

@@ -45,7 +45,7 @@ public class RaftConfig implements Config<RequestProcessor4CP> {
     //自己的地址
     private String selfAddress;
 
-    //成员
+    //nodes in cluster
     private Set<String> members = Collections.synchronizedSet(new HashSet<>());
     
     @Override

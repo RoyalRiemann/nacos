@@ -264,10 +264,11 @@ public class MemberUtil {
      * @return true if all content is same, otherwise false
      */
     public static boolean isBasicInfoChanged(Member actual, Member expected) {
+        //端口、IP、地址、状态
         if (null == expected) {
             return null == actual;
         }
-        //IP PORT ADDRESS ablity
+        //IP PORT ADDRESS abilities
         if (!expected.getIp().equals(actual.getIp())) {
             return true;
         }
@@ -287,7 +288,8 @@ public class MemberUtil {
         
         return isBasicInfoChangedInExtendInfo(expected, actual);
     }
-    
+
+    //权重、站点、raft端口
     private static boolean isBasicInfoChangedInExtendInfo(Member expected, Member actual) {
         for (String each : MemberMetaDataConstants.BASIC_META_KEYS) {
             if (expected.getExtendInfo().containsKey(each) != actual.getExtendInfo().containsKey(each)) {
