@@ -82,10 +82,12 @@ import java.util.concurrent.ConcurrentSkipListMap;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 @Component(value = "serverMemberManager")
-public class ServerMemberManager implements ApplicationListener<WebServerInitializedEvent> {
+public class ServerMemberManager implements ApplicationListener<WebServerInitializedEvent> { //node管理服务
 
+    //异步的rest服务
     private final NacosAsyncRestTemplate asyncRestTemplate = HttpClientBeanHolder.getNacosAsyncRestTemplate(Loggers.CORE);
 
+    //默认的服务端口8848
     private static final int DEFAULT_SERVER_PORT = 8848;
 
     private static final String SERVER_PORT_PROPERTY = "server.port";
@@ -94,10 +96,13 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
 
     private static final String MEMBER_CHANGE_EVENT_QUEUE_SIZE_PROPERTY = "nacos.member-change-event.queue.size";
 
+    //默认的node的数量
     private static final int DEFAULT_MEMBER_CHANGE_EVENT_QUEUE_SIZE = 128;
 
+    //是否使用addressServer
     private static boolean isUseAddressServer = false;
 
+    //默认的延时事件
     private static final long DEFAULT_TASK_DELAY_TIME = 5_000L;
 
     /**
@@ -106,37 +111,37 @@ public class ServerMemberManager implements ApplicationListener<WebServerInitial
     private volatile ConcurrentSkipListMap<String, Member> serverList;
 
     /**
-     * Is this node in the cluster list.
+     * Is this node in the cluster list.判断这个节点是否在集群列表中
      */
     private static volatile boolean isInIpList = true;
 
     /**
-     * port.
+     * port. 端口-----DEFAULT_SERVER_PORT?
      */
     private int port;
 
     /**
-     * Address information for the local node.
+     * Address information for the local node. 本地node的ip:port
      */
     private String localAddress;
 
     /**
-     * Addressing pattern instances.
+     * Addressing pattern instances. 寻址模式实例
      */
     private MemberLookup lookup;
 
     /**
-     * self member obj.
+     * self member obj.自己node
      */
     private volatile Member self;
 
     /**
-     * here is always the node information of the "UP" state.
+     * here is always the node information of the "UP" state.up状态下的member信息
      */
     private volatile Set<String> memberAddressInfos = new ConcurrentHashSet<>();
 
     /**
-     * Broadcast this node element information task.
+     * Broadcast this node element information task. 广播node信息的任务
      */
     private final MemberInfoReportTask infoReportTask = new MemberInfoReportTask();
 
