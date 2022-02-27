@@ -30,11 +30,14 @@ import java.util.List;
 public class RaftEvent extends SlowEvent {
     
     private static final long serialVersionUID = -4304258594602886451L;
-    
+
+    //分组ID
     private String groupId;
-    
+
+    //leader
     private String leader = null;
-    
+
+    //任期
     private Long term = null;
     
     private String errMsg = "";

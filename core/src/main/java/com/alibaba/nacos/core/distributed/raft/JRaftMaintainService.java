@@ -28,6 +28,7 @@ import java.util.Objects;
 
 /**
  * JRaft operations interface.
+ * 执行JRaft命令
  *
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
@@ -45,7 +46,7 @@ public class JRaftMaintainService {
     }
     
     /**
-     * Execute relevant commands.
+     * Execute relevant commands.执行相关命令
      *
      * @param args {@link Map}
      * @return {@link RestResult}
@@ -57,6 +58,7 @@ public class JRaftMaintainService {
             final Node node = raftServer.findNodeByGroup(groupId);
             return single(cliService, groupId, node, args);
         }
+        //不包含groupId,就适用于全部，每个group的每个node都执行
         Map<String, JRaftServer.RaftGroupTuple> tupleMap = raftServer.getMultiRaftGroup();
         for (Map.Entry<String, JRaftServer.RaftGroupTuple> entry : tupleMap.entrySet()) {
             final String group = entry.getKey();
@@ -68,7 +70,8 @@ public class JRaftMaintainService {
         }
         return RestResultUtils.success();
     }
-    
+
+    //执行JRaftOps命令
     private RestResult<String> single(CliService cliService, String groupId, Node node, Map<String, String> args) {
         try {
             if (node == null) {

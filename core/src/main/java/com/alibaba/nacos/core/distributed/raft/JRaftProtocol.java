@@ -122,19 +122,21 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     public void init(RaftConfig config) {
         if (initialized.compareAndSet(false, true)) {
             this.raftConfig = config;
+            //使用SharePublisher发布RaftEvent事件
             NotifyCenter.registerToSharePublisher(RaftEvent.class);//注册RaftEvent事件到sharePublisher
             this.raftServer.init(this.raftConfig);//服务初始化
-            this.raftServer.start();
+            this.raftServer.start();//服务启动
             
             // There is only one consumer to ensure that the internal consumption
-            // is sequential and there is no concurrent competition
+            // is sequential and there is no concurrent competition,顺序消费
             NotifyCenter.registerSubscriber(new Subscriber<RaftEvent>() {
                 @Override
                 public void onEvent(RaftEvent event) {
                     Loggers.RAFT.info("This Raft event changes : {}", event);
-                    final String groupId = event.getGroupId();
                     Map<String, Map<String, Object>> value = new HashMap<>();
                     Map<String, Object> properties = new HashMap<>();
+
+                    final String groupId = event.getGroupId();
                     final String leader = event.getLeader();//leader
                     final Long term = event.getTerm();//任期
                     final List<String> raftClusterInfo = event.getRaftClusterInfo();//集群信息
@@ -142,10 +144,10 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
                     
                     // Leader information needs to be selectively updated. If it is valid data,
                     // the information in the protocol metadata is updated.
-                    MapUtil.putIfValNoEmpty(properties, MetadataKey.LEADER_META_DATA, leader);
-                    MapUtil.putIfValNoNull(properties, MetadataKey.TERM_META_DATA, term);
-                    MapUtil.putIfValNoEmpty(properties, MetadataKey.RAFT_GROUP_MEMBER, raftClusterInfo);
-                    MapUtil.putIfValNoEmpty(properties, MetadataKey.ERR_MSG, errMsg);
+                    MapUtil.putIfValNoEmpty(properties, MetadataKey.LEADER_META_DATA, leader);//leader
+                    MapUtil.putIfValNoNull(properties, MetadataKey.TERM_META_DATA, term);//term
+                    MapUtil.putIfValNoEmpty(properties, MetadataKey.RAFT_GROUP_MEMBER, raftClusterInfo);//clusterInfo
+                    MapUtil.putIfValNoEmpty(properties, MetadataKey.ERR_MSG, errMsg);//errorMsg？？？
                     
                     value.put(groupId, properties);
                     metaData.load(value);
@@ -163,7 +165,8 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
             });
         }
     }
-    
+
+    //增加处理器
     @Override
     public void addRequestProcessors(Collection<RequestProcessor4CP> processors) {
         raftServer.createMultiRaftGroup(processors);
@@ -188,12 +191,12 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     }
     
     @Override
-    public CompletableFuture<Response> writeAsync(WriteRequest request) {
+    public CompletableFuture<Response> writeAsync(WriteRequest request) { //异步写
         return raftServer.commit(request.getGroup(), request, new CompletableFuture<>());
     }
     
     @Override
-    public void memberChange(Set<String> addresses) {
+    public void memberChange(Set<String> addresses) {//这里只处理了删除的情况,可以删除5次,每次间隔100ms
         for (int i = 0; i < 5; i++) {
             if (this.raftServer.peerChange(jRaftMaintainService, addresses)) {
                 return;
@@ -212,16 +215,18 @@ public class JRaftProtocol extends AbstractConsistencyProtocol<RaftConfig, Reque
     }
     
     @Override
-    public RestResult<String> execute(Map<String, String> args) {
+    public RestResult<String> execute(Map<String, String> args) { //执行相关命令
         return jRaftMaintainService.execute(args);
     }
-    
+
+    //注入元数据
     private void injectProtocolMetaData(ProtocolMetaData metaData) {
         Member member = memberManager.getSelf();
         member.setExtendVal("raftMetaData", metaData);//增加raft元数据信息
         memberManager.update(member);
     }
-    
+
+    //通过group查询node，然后判断是否是leader
     @Override
     public boolean isLeader(String group) {
         Node node = raftServer.findNodeByGroup(group);

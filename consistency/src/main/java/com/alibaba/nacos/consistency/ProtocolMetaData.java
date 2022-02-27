@@ -35,6 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @SuppressWarnings("PMD.Rule:CollectionInitShouldAssignCapacityRule")
 public final class ProtocolMetaData {
 
+    //协议的元信息
     private final Map<String, MetaData> metaDataMap = new ConcurrentHashMap<>(4);
     
     public Map<String, Map<Object, Object>> getMetaDataMap() {
@@ -49,7 +50,7 @@ public final class ProtocolMetaData {
     
     /**
      * save target consistency protocol metadata.
-     *
+     * 保存持久化的协议信息
      * @param mapMap {@link Map}
      */
     public void load(final Map<String, Map<String, Object>> mapMap) {

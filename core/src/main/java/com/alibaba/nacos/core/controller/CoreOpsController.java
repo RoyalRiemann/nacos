@@ -43,7 +43,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping(Commons.NACOS_CORE_CONTEXT + "/ops")
-public class CoreOpsController {
+public class CoreOpsController { //通过HTTP接口操作的核心模块
     
     private final ProtocolManager protocolManager;
     
