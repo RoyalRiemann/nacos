@@ -102,6 +102,7 @@ public class PersistentConsistencyServiceDelegateImpl implements PersistentConsi
     
     private BasePersistentServiceProcessor createNewPersistentServiceProcessor(ProtocolManager protocolManager,
             ClusterVersionJudgement versionJudgement) throws Exception {
+        //通过 createNewPersistentServiceProcessor 方法,关联拿到CP模型的raft一致性算法框架
         final BasePersistentServiceProcessor processor =
                 EnvUtil.getStandaloneMode() ? new StandalonePersistentServiceProcessor(versionJudgement)
                         : new PersistentServiceProcessor(protocolManager, versionJudgement);

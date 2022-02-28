@@ -61,6 +61,7 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
     public PersistentServiceProcessor(ProtocolManager protocolManager, ClusterVersionJudgement versionJudgement)
             throws Exception {
         super(versionJudgement);
+        //持久层协议使用的CP模型
         this.protocol = protocolManager.getCpProtocol();
     }
     

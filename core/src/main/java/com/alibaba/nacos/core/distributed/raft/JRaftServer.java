@@ -118,10 +118,10 @@ public class JRaftServer {
     //Rpc服务
     private RpcServer rpcServer;
 
-    //客户端服务,感觉是命令行服务?
+    //直接调用leader进行连接操作的服务类
     private CliClientServiceImpl cliClientService;
 
-    //
+    //对一些业务进行了封装，调用CliClientServiceImpl操作的类
     private CliService cliService;
     
     // 组和组服务，以及复制状态机，以及节点
@@ -304,15 +304,17 @@ public class JRaftServer {
             //注册自己到集群,这里的骚操作时，首先从peers中找到一条能够通的，让然后找到leader，然后再把数据打包从leader处进行add
             RaftExecutor.executeByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration));
             
-            // Turn on the leader auto refresh for this group
+            // Turn on the leader auto refresh for this group--开启leader自动刷新?
             Random random = new Random();
+            //选举超时+随机时间,刷新leader和configuration
             long period = nodeOptions.getElectionTimeoutMs() + random.nextInt(5 * 1000);
             RaftExecutor.scheduleRaftMemberRefreshJob(() -> refreshRouteTable(groupName),
                     nodeOptions.getElectionTimeoutMs(), period, TimeUnit.MILLISECONDS);
             multiRaftGroup.put(groupName, new RaftGroupTuple(node, processor, raftGroupService, machine));
         }
     }
-    
+
+    //这哥们的代码真绕
     CompletableFuture<Response> get(final ReadRequest request) {
         final String group = request.getGroup();
         CompletableFuture<Response> future = new CompletableFuture<>();
@@ -324,6 +326,7 @@ public class JRaftServer {
         final Node node = tuple.node;
         final RequestProcessor processor = tuple.processor;
         try {
+            //ReadIndexClosure 每个2s执行一次
             node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
                 @Override
                 public void run(Status status, long index, byte[] reqCtx) {
@@ -434,7 +437,8 @@ public class JRaftServer {
             Loggers.RAFT.error("There was an error in the raft protocol shutdown, cause: ", t);
         }
     }
-    
+
+    //node的apply操作，这是RAFT的基本上第一个操作。
     public void applyOperation(Node node, Message data, FailoverClosure closure) {
         final Task task = new Task();
         task.setDone(new NacosClosure(data, status -> {
@@ -446,7 +450,8 @@ public class JRaftServer {
         task.setData(ByteBuffer.wrap(data.toByteArray()));
         node.apply(task);
     }
-    
+
+    //调用leader
     private void invokeToLeader(final String group, final Message request, final int timeoutMillis,
             FailoverClosure closure) {
         try {
@@ -455,6 +460,7 @@ public class JRaftServer {
             cliClientService.getRpcClient().invokeAsync(leaderIp, request, new InvokeCallback() {
                 @Override
                 public void complete(Object o, Throwable ex) {
+                    //异常处理
                     if (Objects.nonNull(ex)) {
                         closure.setThrowable(ex);
                         closure.run(new Status(RaftError.UNKNOWN, ex.getMessage()));
@@ -508,7 +514,8 @@ public class JRaftServer {
         });
         return successCnt.get() == multiRaftGroup.size();
     }
-    
+
+    //刷新
     void refreshRouteTable(String group) {
         if (isShutdown) {
             return;
@@ -520,12 +527,14 @@ public class JRaftServer {
             RouteTable instance = RouteTable.getInstance();
             Configuration oldConf = instance.getConfiguration(groupName);
             String oldLeader = Optional.ofNullable(instance.selectLeader(groupName)).orElse(PeerId.emptyPeer())
-                    .getEndpoint().toString();
+                    .getEndpoint().toString();//从缓存中拿到leader
             // fix issue #3661  https://github.com/alibaba/nacos/issues/3661
             status = instance.refreshLeader(this.cliClientService, groupName, rpcRequestTimeoutMs);
             if (!status.isOk()) {
                 Loggers.RAFT.error("Fail to refresh leader for group : {}, status is : {}", groupName, status);
             }
+
+            //刷新configuration
             status = instance.refreshConfiguration(this.cliClientService, groupName, rpcRequestTimeoutMs);
             if (!status.isOk()) {
                 Loggers.RAFT
