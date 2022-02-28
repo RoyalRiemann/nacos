@@ -50,12 +50,14 @@ public class PersistentConsistencyServiceDelegateImpl implements PersistentConsi
             RaftConsistencyServiceImpl oldPersistentConsistencyService, ProtocolManager protocolManager)
             throws Exception {
         this.versionJudgement = versionJudgement;
+        //这里的老的持久化一致性服务，使用的老的RAFT算法。代码比较挫逼，但是容易看懂。。
         this.oldPersistentConsistencyService = oldPersistentConsistencyService;
         this.newPersistentConsistencyService = createNewPersistentServiceProcessor(protocolManager, versionJudgement);
         init();
     }
     
     private void init() {
+        //是否切换新的持久层一致性服务
         this.versionJudgement.registerObserver(isAllNewVersion -> switchNewPersistentService = isAllNewVersion, -1);
     }
     
@@ -103,6 +105,7 @@ public class PersistentConsistencyServiceDelegateImpl implements PersistentConsi
     private BasePersistentServiceProcessor createNewPersistentServiceProcessor(ProtocolManager protocolManager,
             ClusterVersionJudgement versionJudgement) throws Exception {
         //通过 createNewPersistentServiceProcessor 方法,关联拿到CP模型的raft一致性算法框架
+        //单例模式情况下，使用自己的kv模型，集群模式下，使用的是Raft
         final BasePersistentServiceProcessor processor =
                 EnvUtil.getStandaloneMode() ? new StandalonePersistentServiceProcessor(versionJudgement)
                         : new PersistentServiceProcessor(protocolManager, versionJudgement);

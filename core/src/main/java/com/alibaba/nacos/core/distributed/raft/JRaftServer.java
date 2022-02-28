@@ -360,7 +360,8 @@ public class JRaftServer {
     public void readFromLeader(final ReadRequest request, final CompletableFuture<Response> future) {
         commit(request.getGroup(), request, future);
     }
-    
+
+    //put数据
     public CompletableFuture<Response> commit(final String group, final Message data,
             final CompletableFuture<Response> future) {
         LoggerUtils.printIfDebugEnabled(Loggers.RAFT, "data requested this time : {}", data);

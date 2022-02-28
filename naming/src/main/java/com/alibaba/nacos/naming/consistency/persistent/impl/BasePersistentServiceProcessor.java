@@ -59,7 +59,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class BasePersistentServiceProcessor extends RequestProcessor4CP
         implements PersistentConsistencyService {
-    
+
+    //操作
     enum Op {
         /**
          * write ops.

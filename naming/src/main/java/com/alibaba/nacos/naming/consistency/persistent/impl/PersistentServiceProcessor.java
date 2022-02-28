@@ -60,6 +60,7 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
     
     public PersistentServiceProcessor(ProtocolManager protocolManager, ClusterVersionJudgement versionJudgement)
             throws Exception {
+        //这里有很多东西
         super(versionJudgement);
         //持久层协议使用的CP模型
         this.protocol = protocolManager.getCpProtocol();
@@ -77,15 +78,17 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
             hasLeader = StringUtils.isNotBlank(String.valueOf(leader));
             Loggers.RAFT.info("Raft group {} has leader {}", raftGroup, leader);
         });
-        this.protocol.addRequestProcessors(Collections.singletonList(this));
+        this.protocol.addRequestProcessors(Collections.singletonList(this)); //PersistentServiceProcessor
         // If you choose to use the new RAFT protocol directly, there will be no compatible logical execution
+        //如果是选择一个新的raft协议，则兼容不会执行
         if (EnvUtil.getProperty(Constants.NACOS_NAMING_USE_NEW_RAFT_FIRST, Boolean.class, false)) {
-            NotifyCenter.registerSubscriber(notifier);
+            NotifyCenter.registerSubscriber(notifier); //PersistentNotifier
             waitLeader();
             startNotify = true;
         }
     }
-    
+
+    //是否有leader或者是否有error?
     private void waitLeader() {
         while (!hasLeader && !hasError) {
             Loggers.RAFT.info("Waiting Jraft leader vote ...");
@@ -95,7 +98,8 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
             }
         }
     }
-    
+
+    //写数据!!!
     @Override
     public void put(String key, Record value) throws NacosException {
         final BatchWriteRequest req = new BatchWriteRequest();
@@ -109,7 +113,8 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
             throw new NacosException(ErrorCode.ProtoSubmitError.getCode(), e.getMessage());
         }
     }
-    
+
+    //移除数据
     @Override
     public void remove(String key) throws NacosException {
         final BatchWriteRequest req = new BatchWriteRequest();
@@ -122,7 +127,8 @@ public class PersistentServiceProcessor extends BasePersistentServiceProcessor {
             throw new NacosException(ErrorCode.ProtoSubmitError.getCode(), e.getMessage());
         }
     }
-    
+
+    //获取数据
     @Override
     public Datum get(String key) throws NacosException {
         final List<byte[]> keys = new ArrayList<>(1);

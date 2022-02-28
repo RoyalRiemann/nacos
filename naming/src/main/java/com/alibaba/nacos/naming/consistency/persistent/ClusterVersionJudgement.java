@@ -48,7 +48,8 @@ public class ClusterVersionJudgement {
     private final ServerMemberManager memberManager;
     
     private final List<ConsumerWithPriority> observers = new CopyOnWriteArrayList<>();
-    
+
+    //这里是真没有价值，为什么不给出一个配置。然后通过校验来置为是否真启动呢?
     public ClusterVersionJudgement(ServerMemberManager memberManager) {
         this.memberManager = memberManager;
         GlobalExecutor.submitClusterVersionJudge(this::runVersionListener, TimeUnit.SECONDS.toMillis(5));
@@ -71,6 +72,7 @@ public class ClusterVersionJudgement {
             return;
         }
         try {
+            //1.4.0之后，持久化模型切换为新的版本
             judge();
         } finally {
             GlobalExecutor.submitClusterVersionJudge(this::runVersionListener, TimeUnit.SECONDS.toMillis(5));
