@@ -106,91 +106,114 @@ public class JRaftServer {
     // Existential life cycle
     
     static {
-        // Set bolt buffer
+        // Set bolt buffer 设置阈值吧
         // System.getProperties().setProperty("bolt.channel_write_buf_low_water_mark", String.valueOf(64 * 1024 * 1024));
         // System.getProperties().setProperty("bolt.channel_write_buf_high_water_mark", String.valueOf(256 * 1024 * 1024));
-        
+
+        //128m~256m
         System.getProperties().setProperty("bolt.netty.buffer.low.watermark", String.valueOf(128 * 1024 * 1024));
         System.getProperties().setProperty("bolt.netty.buffer.high.watermark", String.valueOf(256 * 1024 * 1024));
     }
-    
+
+    //Rpc服务
     private RpcServer rpcServer;
-    
+
+    //客户端服务,感觉是命令行服务?
     private CliClientServiceImpl cliClientService;
-    
+
+    //
     private CliService cliService;
     
-    // Ordinary member variable
+    // 组和组服务，以及复制状态机，以及节点
     private Map<String, RaftGroupTuple> multiRaftGroup = new ConcurrentHashMap<>();
-    
+
+    // 是否已经启动
     private volatile boolean isStarted = false;
-    
+
+    // 是否已经关闭
     private volatile boolean isShutdown = false;
-    
+
+    // 配置文件
     private Configuration conf;
-    
+
+    // rpc处理器
     private RpcProcessor userProcessor;
-    
+
+    // Node命令
     private NodeOptions nodeOptions;
     
     private Serializer serializer;
-    
+
+    // 处理器
     private Collection<RequestProcessor4CP> processors = Collections.synchronizedSet(new HashSet<>());
-    
+
+    // 自己IP
     private String selfIp;
-    
+
+    // 自己port
     private int selfPort;
-    
+
+    //RaftConfig Nacos定义的配置文件
     private RaftConfig raftConfig;
-    
+
+    //代表一个参与者
     private PeerId localPeerId;
-    
+
+    //失败重试次数
     private int failoverRetries;
-    
+
+    // RPC超时时间
     private int rpcRequestTimeoutMs;
-    
+
+    //初始化
     public JRaftServer() {
         this.conf = new Configuration();
     }
-    
+
+    //设置失败重试次数
     public void setFailoverRetries(int failoverRetries) {
         this.failoverRetries = failoverRetries;
     }
-    
+
+    //初始化
     void init(RaftConfig config) {
         this.raftConfig = config;
-        this.serializer = SerializeFactory.getDefault();
+        this.serializer = SerializeFactory.getDefault();//默认hession
         Loggers.RAFT.info("Initializes the Raft protocol, raft-config info : {}", config);
-        RaftExecutor.init(config);
+        RaftExecutor.init(config);//初始化raft的各种执行器
         
         final String self = config.getSelfMember();
         String[] info = InternetAddressUtil.splitIPPortStr(self);
         selfIp = info[0];
         selfPort = Integer.parseInt(info[1]);
+        //复制组中的参与者?
         localPeerId = PeerId.parsePeer(self);
         nodeOptions = new NodeOptions();
         
-        // Set the election timeout time. The default is 5 seconds.
+        // Set the election timeout time. The default is 5 seconds. leader在超时事件内就没有发送心跳到local，本地发起投票，状态变更为candidate
         int electionTimeout = Math.max(ConvertUtils.toInt(config.getVal(RaftSysConstants.RAFT_ELECTION_TIMEOUT_MS),
                 RaftSysConstants.DEFAULT_ELECTION_TIMEOUT), RaftSysConstants.DEFAULT_ELECTION_TIMEOUT);
         
         rpcRequestTimeoutMs = ConvertUtils.toInt(raftConfig.getVal(RaftSysConstants.RAFT_RPC_REQUEST_TIMEOUT_MS),
                 RaftSysConstants.DEFAULT_RAFT_RPC_REQUEST_TIMEOUT_MS);
-        
+
+        //是否全局的选举定时、是否全局投票定时、是否全局降速定时、是否全局分享的快照定时器
         nodeOptions.setSharedElectionTimer(true);
         nodeOptions.setSharedVoteTimer(true);
         nodeOptions.setSharedStepDownTimer(true);
         nodeOptions.setSharedSnapshotTimer(true);
         
-        nodeOptions.setElectionTimeoutMs(electionTimeout);
+        nodeOptions.setElectionTimeoutMs(electionTimeout);//选举超时
         RaftOptions raftOptions = RaftOptionsBuilder.initRaftOptions(raftConfig);
+        //从代码看，这个步骤估计是设计者后面补充的
         nodeOptions.setRaftOptions(raftOptions);
-        // open jraft node metrics record function
+        // open jraft node metrics record function,建模是打开的
         nodeOptions.setEnableMetrics(true);
         
         CliOptions cliOptions = new CliOptions();
-        
-        this.cliService = RaftServiceFactory.createAndInitCliService(cliOptions);
+
+        //这两个服务暂时不知道是什么用处
+        this.cliService = RaftServiceFactory.createAndInitCliService(cliOptions); //启动cli服务
         this.cliClientService = (CliClientServiceImpl) ((CliServiceImpl) this.cliService).getCliClientService();
     }
     
@@ -202,13 +225,16 @@ public class JRaftServer {
                 com.alipay.sofa.jraft.NodeManager raftNodeManager = com.alipay.sofa.jraft.NodeManager.getInstance();
                 for (String address : raftConfig.getMembers()) {
                     PeerId peerId = PeerId.parsePeer(address);
-                    conf.addPeer(peerId);
+                    conf.addPeer(peerId); //主要就是把peerId加到conf中了
                     raftNodeManager.addAddress(peerId.getEndpoint());
                 }
+                //初始化的配置文件
                 nodeOptions.setInitialConf(conf);
-                
+
+                //初始化RPCservice,包括各种初始化参数，同时也包括各种处理器processor
                 rpcServer = JRaftUtils.initRpcServer(this, localPeerId);
-                
+
+                //GrpcServer init
                 if (!this.rpcServer.init(null)) {
                     Loggers.RAFT.error("Fail to init [BaseRpcServer].");
                     throw new RuntimeException("Fail to init [BaseRpcServer].");
@@ -216,6 +242,7 @@ public class JRaftServer {
                 
                 // Initialize multi raft group service framework
                 isStarted = true;
+                //
                 createMultiRaftGroup(processors);
                 Loggers.RAFT.info("========= The raft protocol start finished... =========");
             } catch (Exception e) {
@@ -227,6 +254,7 @@ public class JRaftServer {
     
     synchronized void createMultiRaftGroup(Collection<RequestProcessor4CP> processors) {
         // There is no reason why the LogProcessor cannot be processed because of the synchronization
+        // 同步问题
         if (!this.isStarted) {
             this.processors.addAll(processors);
             return;
@@ -235,6 +263,7 @@ public class JRaftServer {
         final String parentPath = Paths.get(EnvUtil.getNacosHome(), "data/protocol/raft").toString();
         
         for (RequestProcessor4CP processor : processors) {
+            //组？
             final String groupName = processor.group();
             if (multiRaftGroup.containsKey(groupName)) {
                 throw new DuplicateRaftGroupException(groupName);
@@ -243,10 +272,11 @@ public class JRaftServer {
             // Ensure that each Raft Group has its own configuration and NodeOptions
             Configuration configuration = conf.copy();
             NodeOptions copy = nodeOptions.copy();
+            //每个组单独建文件路径
             JRaftUtils.initDirectory(parentPath, groupName, copy);
             
             // Here, the LogProcessor is passed into StateMachine, and when the StateMachine
-            // triggers onApply, the onApply of the LogProcessor is actually called
+            // triggers onApply, the onApply of the LogProcessor is actually called,状态机也是单独的
             NacosStateMachine machine = new NacosStateMachine(this, processor);
             
             copy.setFsm(machine);
@@ -257,17 +287,21 @@ public class JRaftServer {
                     RaftSysConstants.DEFAULT_RAFT_SNAPSHOT_INTERVAL_SECS);
             
             // If the business module does not implement a snapshot processor, cancel the snapshot
+            // 如果没有实现快照处理器，则取消快照:快照处理器和日志处理器同级别
             doSnapshotInterval = CollectionUtils.isEmpty(processor.loadSnapshotOperate()) ? 0 : doSnapshotInterval;
             
             copy.setSnapshotIntervalSecs(doSnapshotInterval);
             Loggers.RAFT.info("create raft group : {}", groupName);
+            //nacos的Raft按组服务的
             RaftGroupService raftGroupService = new RaftGroupService(groupName, localPeerId, copy, rpcServer, true);
     
             // Because BaseRpcServer has been started before, it is not allowed to start again here
+            //获取node，并且初始化节点
             Node node = raftGroupService.start(false);
-            machine.setNode(node);
+            machine.setNode(node);//将node放到复制状态机
             RouteTable.getInstance().updateConfiguration(groupName, configuration);
-            
+
+            //注册自己到集群,这里的骚操作时，首先从peers中找到一条能够通的，让然后找到leader，然后再把数据打包从leader处进行add
             RaftExecutor.executeByCommon(() -> registerSelfToCluster(groupName, localPeerId, configuration));
             
             // Turn on the leader auto refresh for this group
@@ -535,9 +569,11 @@ public class JRaftServer {
 
         //节点
         private Node node;
-        
+
+        //组服务
         private RaftGroupService raftGroupService;
-        
+
+        //复制状态机
         private NacosStateMachine machine;
         
         @JustForTest

@@ -33,13 +33,17 @@ import java.util.concurrent.TimeUnit;
  * @author <a href="mailto:liaochuntao@live.com">liaochuntao</a>
  */
 public final class RaftExecutor {
-    
+
+    //核心的执行器
     private static ExecutorService raftCoreExecutor;
-    
+
+    //命令服务的执行器
     private static ExecutorService raftCliServiceExecutor;
-    
+
+    //公共执行器
     private static ScheduledExecutorService raftCommonExecutor;
-    
+
+    //快照执行器
     private static ExecutorService raftSnapshotExecutor;
     
     private static final String OWNER = ClassUtils.getCanonicalName(JRaftServer.class);
@@ -54,7 +58,7 @@ public final class RaftExecutor {
      */
     public static void init(RaftConfig config) {
         
-        int raftCoreThreadNum = Integer.parseInt(config.getValOfDefault(RaftSysConstants.RAFT_CORE_THREAD_NUM, "8"));
+        int raftCoreThreadNum = Integer.parseInt(config.getValOfDefault(RaftSysConstants.RAFT_CORE_THREAD_NUM, "8"));//默认8
         int raftCliServiceThreadNum = Integer
                 .parseInt(config.getValOfDefault(RaftSysConstants.RAFT_CLI_SERVICE_THREAD_NUM, "4"));
         

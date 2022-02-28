@@ -125,7 +125,7 @@ public final class ExecutorFactory {
          */
         public static ExecutorService newFixedExecutorService(final String group, final int nThreads,
                 final ThreadFactory threadFactory) {
-            ExecutorService executorService = Executors.newFixedThreadPool(nThreads, threadFactory);
+            ExecutorService executorService = Executors.newFixedThreadPool(nThreads, threadFactory);//固定线程数量的线程池，控制资源消耗.
             THREAD_POOL_MANAGER.register(DEFAULT_NAMESPACE, group, executorService);
             return executorService;
         }
@@ -139,7 +139,7 @@ public final class ExecutorFactory {
          */
         public static ScheduledExecutorService newSingleScheduledExecutorService(final String group,
                 final ThreadFactory threadFactory) {
-            ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);
+            ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1, threadFactory);//DelayQueue
             THREAD_POOL_MANAGER.register(DEFAULT_NAMESPACE, group, executorService);
             return executorService;
         }
