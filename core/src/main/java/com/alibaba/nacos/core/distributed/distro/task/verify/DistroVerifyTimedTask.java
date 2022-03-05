@@ -63,8 +63,8 @@ public class DistroVerifyTimedTask implements Runnable {
     }
     
     private void verifyForDataStorage(String type, List<Member> targetServer) {
-        DistroDataStorage dataStorage = distroComponentHolder.findDataStorage(type);
-        if (!dataStorage.isFinishInitial()) {
+        DistroDataStorage dataStorage = distroComponentHolder.findDataStorage(type); //找到storage实现
+        if (!dataStorage.isFinishInitial()) {//是否完成初始化
             Loggers.DISTRO.warn("data storage {} has not finished initial step, do not send verify data",
                     dataStorage.getClass().getSimpleName());
             return;
@@ -73,6 +73,7 @@ public class DistroVerifyTimedTask implements Runnable {
         if (null == verifyData || verifyData.isEmpty()) {
             return;
         }
+        //轮询服务器，然后组装传输代理信息
         for (Member member : targetServer) {
             DistroTransportAgent agent = distroComponentHolder.findTransportAgent(type);
             if (null == agent) {

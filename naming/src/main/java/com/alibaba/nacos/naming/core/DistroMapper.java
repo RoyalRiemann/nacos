@@ -76,7 +76,8 @@ public class DistroMapper extends MemberChangeListener {
     
     /**
      * Judge whether current server is responsible for input tag.
-     *
+     * 这里体现了distro如何相应请求的逻辑，先判断是否支持distro或者单例，然后判断是否是localadress，然后通过hash计算自己是否是
+     * 需要相应的节点
      * @param responsibleTag responsible tag, serviceName for v1 and ip:port for v2
      * @return true if input service is response, otherwise false
      */
@@ -104,7 +105,7 @@ public class DistroMapper extends MemberChangeListener {
     
     /**
      * Calculate which other server response input tag.
-     *
+     * 如果不是自己响应，则计算出是谁响应
      * @param responsibleTag responsible tag, serviceName for v1 and ip:port for v2
      * @return server which response input service
      */
@@ -131,6 +132,7 @@ public class DistroMapper extends MemberChangeListener {
     
     @Override
     public void onEvent(MembersChangeEvent event) {
+        //事件的本质，就是修改本地的healthyList
         // Here, the node list must be sorted to ensure that all nacos-server's
         // node list is in the same order
         List<String> list = MemberUtil.simpleMembers(MemberUtil.selectTargetMembers(event.getMembers(),

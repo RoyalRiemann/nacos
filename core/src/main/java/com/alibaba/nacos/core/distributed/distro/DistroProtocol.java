@@ -64,6 +64,7 @@ public class DistroProtocol {
             isInitialized = true;
             return;
         }
+        //开启了认证功能
         startVerifyTask();
         startLoadTask();
     }

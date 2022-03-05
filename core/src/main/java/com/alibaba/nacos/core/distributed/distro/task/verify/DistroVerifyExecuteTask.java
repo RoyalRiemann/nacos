@@ -51,6 +51,7 @@ public class DistroVerifyExecuteTask extends AbstractExecuteTask {
     
     @Override
     public void run() {
+        //执行认证功能
         for (DistroData each : verifyData) {
             try {
                 if (transportAgent.supportCallbackTransport()) {

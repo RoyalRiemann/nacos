@@ -90,8 +90,8 @@ public class DistroLoadDataTask implements Runnable {
     }
     
     private boolean loadAllDataSnapshotFromRemote(String resourceType) {
-        DistroTransportAgent transportAgent = distroComponentHolder.findTransportAgent(resourceType);
-        DistroDataProcessor dataProcessor = distroComponentHolder.findDataProcessor(resourceType);
+        DistroTransportAgent transportAgent = distroComponentHolder.findTransportAgent(resourceType);//找到传输代理
+        DistroDataProcessor dataProcessor = distroComponentHolder.findDataProcessor(resourceType);//找到处理器
         if (null == transportAgent || null == dataProcessor) {
             Loggers.DISTRO.warn("[DISTRO-INIT] Can't find component for type {}, transportAgent: {}, dataProcessor: {}",
                     resourceType, transportAgent, dataProcessor);
