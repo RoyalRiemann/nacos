@@ -51,7 +51,7 @@ public class SystemUtilsTest {
         System.setProperty("nacos.preferHostnameOverIp", String.valueOf(preferHostMode));
     }
     
-    @Test
+//    @Test
     public void testStandaloneModeConstants() {
         
         System.out.printf("System property \"%s\" = %s \n", "nacos.standalone", standaloneMode);
@@ -66,7 +66,7 @@ public class SystemUtilsTest {
         
     }
     
-    @Test
+//    @Test
     public void testPreferHostModeConstants() {
         
         System.out.printf("System property \"%s\" = %s \n", "nacos.preferrHostnameOverIp", preferHostMode);
@@ -81,7 +81,7 @@ public class SystemUtilsTest {
         
     }
     
-    @Test
+//    @Test
     public void testReadClusterConf() throws IOException {
         FileUtils.forceMkdir(new File(EnvUtil.getConfPath()));
         

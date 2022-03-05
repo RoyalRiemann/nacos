@@ -49,7 +49,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Serverlist Manager.
+ * Serverlist Manager.屏蔽cluster构造差异
  *
  * @author Nacos
  */
@@ -61,6 +61,7 @@ public class ServerListManager implements Closeable {
 
     private static final String HTTP = "http://";
 
+    //http模板
     private final NacosRestTemplate nacosRestTemplate = ConfigHttpClientManager.getInstance()
         .getNacosRestTemplate();
 

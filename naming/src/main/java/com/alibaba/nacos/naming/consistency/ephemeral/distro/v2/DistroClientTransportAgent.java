@@ -47,7 +47,8 @@ import java.util.concurrent.Executor;
  * @author xiweng.yy
  */
 public class DistroClientTransportAgent implements DistroTransportAgent {
-    
+
+    //集群代理
     private final ClusterRpcClientProxy clusterRpcClientProxy;
     
     private final ServerMemberManager memberManager;

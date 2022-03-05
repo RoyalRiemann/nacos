@@ -56,13 +56,13 @@ public class NacosConfigService implements ConfigService {
     private static final String DOWN = "DOWN";
     
     /**
-     * will be deleted in 2.0 later versions
+     * will be deleted in 2.0 later versions:相当于数据库连接池,屏蔽cluster底层信息
      */
     @Deprecated
     ServerHttpAgent agent = null;
     
     /**
-     * long polling.
+     * long polling.长轮询管理
      */
     private final ClientWorker worker;
     

@@ -112,6 +112,7 @@ public class RaftController {
      */
     @PostMapping("/beat")
     public JsonNode beat(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        System.out.println(request.getRemoteAddr()+":"+request.getRemotePort());
         if (versionJudgement.allMemberIsNewVersion()) {
             throw new IllegalStateException("old raft protocol already stop");
         }
