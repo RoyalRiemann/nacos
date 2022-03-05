@@ -113,9 +113,10 @@ public class RaftController {
     @PostMapping("/beat")
     public JsonNode beat(HttpServletRequest request, HttpServletResponse response) throws Exception {
         System.out.println(request.getRemoteAddr()+":"+request.getRemotePort());
-        if (versionJudgement.allMemberIsNewVersion()) {
-            throw new IllegalStateException("old raft protocol already stop");
-        }
+        //TODO.....
+//        if (versionJudgement.allMemberIsNewVersion()) {
+//            throw new IllegalStateException("old raft protocol already stop");
+//        }
         String entity = new String(IoUtils.tryDecompress(request.getInputStream()), StandardCharsets.UTF_8);
         String value = URLDecoder.decode(entity, "UTF-8");
         value = URLDecoder.decode(value, "UTF-8");
