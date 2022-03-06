@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author nacos
  */
-public class Datum<T extends Record> implements Serializable {
+public class Datum<T extends Record> implements Serializable { //naming 基本数据
     
     private static final long serialVersionUID = -2525482315889753720L;
     

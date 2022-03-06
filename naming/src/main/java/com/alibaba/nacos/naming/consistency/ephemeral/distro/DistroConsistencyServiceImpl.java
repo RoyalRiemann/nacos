@@ -113,6 +113,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
         if (ApplicationUtils.getBean(UpgradeJudgement.class).isUseGrpcFeatures()) {
             return;
         }
+        //如果不是GRPC，则需要同步调用http服务同步到V1
         distroProtocol.sync(new DistroKey(key, KeyBuilder.INSTANCE_LIST_KEY_PREFIX), DataOperation.CHANGE,
                 DistroConfig.getInstance().getSyncDelayMillis());
     }
@@ -136,7 +137,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
      */
     public void onPut(String key, Record value) {
         
-        if (KeyBuilder.matchEphemeralInstanceListKey(key)) {
+        if (KeyBuilder.matchEphemeralInstanceListKey(key)) {//临时实例
             Datum<Instances> datum = new Datum<>();
             datum.value = (Instances) value;
             datum.key = key;
@@ -147,7 +148,8 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
         if (!listeners.containsKey(key)) {
             return;
         }
-        
+
+        //如果又监听，发出change事件
         notifier.addTask(key, DataOperation.CHANGE);
     }
     
@@ -188,6 +190,7 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
             List<String> toUpdateKeys = new ArrayList<>();
             List<String> toRemoveKeys = new ArrayList<>();
             for (Map.Entry<String, String> entry : checksumMap.entrySet()) {
+                //这个server是否在这台机器处理
                 if (distroMapper.responsible(KeyBuilder.getServiceName(entry.getKey()))) {
                     // this key should not be sent from remote server:
                     Loggers.DISTRO.error("receive responsible key timestamp of " + entry.getKey() + " from " + server);
@@ -202,7 +205,8 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
             }
             
             for (String key : dataStore.keys()) {
-                
+
+                //通过key找到了真正该处理的sever，然后判断是不是传进来这个
                 if (!server.equals(distroMapper.mapSrv(KeyBuilder.getServiceName(key)))) {
                     continue;
                 }
@@ -222,7 +226,8 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
             if (toUpdateKeys.isEmpty()) {
                 return;
             }
-            
+
+            //如果是，调用远程判断
             try {
                 DistroHttpCombinedKey distroKey = new DistroHttpCombinedKey(KeyBuilder.INSTANCE_LIST_KEY_PREFIX,
                         server);
@@ -279,7 +284,8 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
                     Loggers.DISTRO.warn("listener of {} not found.", entry.getKey());
                     continue;
                 }
-                
+
+                //进行通知
                 try {
                     for (RecordListener listener : listeners.get(entry.getKey())) {
                         listener.onChange(entry.getKey(), entry.getValue().value);
@@ -389,7 +395,8 @@ public class DistroConsistencyServiceImpl implements EphemeralConsistencyService
          * @param action   action for data
          */
         public void addTask(String datumKey, DataOperation action) {
-            
+
+            //如果key已存在，且是change事件，则ingore
             if (services.containsKey(datumKey) && action == DataOperation.CHANGE) {
                 return;
             }

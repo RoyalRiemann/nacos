@@ -59,7 +59,7 @@ public class DataStore {
     
     /**
      * Batch get datum for a list of keys.
-     *
+     * 批量获取datum
      * @param keys of datum
      * @return list of datum
      */

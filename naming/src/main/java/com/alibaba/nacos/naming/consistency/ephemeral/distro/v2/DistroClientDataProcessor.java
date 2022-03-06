@@ -98,6 +98,8 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
         if (!upgradeJudgement.isUseGrpcFeatures()) {
             return;
         }
+
+        //认证失败同步给对应的目标服务器，其他失败，所有server都同步
         if (event instanceof ClientEvent.ClientVerifyFailedEvent) {
             syncToVerifyFailedServer((ClientEvent.ClientVerifyFailedEvent) event);
         } else {
@@ -106,7 +108,8 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
     }
     
     private void syncToVerifyFailedServer(ClientEvent.ClientVerifyFailedEvent event) {
-        Client client = clientManager.getClient(event.getClientId());
+        Client client = clientManager.getClient(event.getClientId()); //ClientManagerDelegate-->
+        //如果是临时的或者不是响应客户端
         if (null == client || !client.isEphemeral() || !clientManager.isResponsibleClient(client)) {
             return;
         }
@@ -178,6 +181,7 @@ public class DistroClientDataProcessor extends SmartSubscriber implements Distro
                         new ClientOperationEvent.ClientRegisterServiceEvent(singleton, client.getClientId()));
             }
         }
+        //发布事件
         for (Service each : client.getAllPublishedService()) {
             if (!syncedService.contains(each)) {
                 client.removeServiceInstance(each);
